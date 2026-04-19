@@ -309,8 +309,7 @@ async function doAuth() {
   btn.textContent = '処理中...';
   errEl.textContent = '';
   errEl.style.color = 'var(--red)';
-
-  const timeout = new Promise((_,reject) => setTimeout(()=>reject(new Error('タイムアウト。再度お試しください')), 10000));
+  const timeout = new Promise((_,reject) => setTimeout(()=>reject(new Error('タイムアウト。再度お試しください')), 15000));
 
   try {
     let res;
@@ -370,15 +369,19 @@ function setSync(s) {
 async function loadAll() {
   if(!currentUser) return;
   setSync('syncing');
+  const timeout = new Promise((_,reject) => setTimeout(()=>reject(new Error('タイムアウト')), 15000));
   try {
-    const {data, error} = await sb.from('reports').select('*').eq('user_id', currentUser.id);
+    const {data, error} = await Promise.race([
+      sb.from('reports').select('*').eq('user_id', currentUser.id),
+      timeout
+    ]);
     if(error) throw error;
     reports = {};
     data.forEach(r => { reports[r.id] = r; });
     setSync('ok');
   } catch(e) {
     setSync('err');
-    showToast('読み込みに失敗しました');
+    showToast('読み込みに失敗しました。再度お試しください。');
   }
 }
 
