@@ -11,6 +11,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
+  --bg:#ffffff;--bg2:#f7f7f5;--bg3:#efefed;--bg4:#e5e5e3;
+  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.15);
+  --text:#1a1a1a;--text2:#666;--text3:#aaa;
+  --accent:#1a9e5c;--accent2:#0f7a45;--accent-dim:rgba(26,158,92,0.1);
+  --amber:#d97706;--amber-dim:rgba(217,119,6,0.1);
+  --blue:#2563eb;--blue-dim:rgba(37,99,235,0.1);
+  --red:#dc2626;--red-dim:rgba(220,38,38,0.1);
+  --r:14px;--r-sm:8px;
+}
+.dark{
   --bg:#0d0d0d;--bg2:#161616;--bg3:#1f1f1f;--bg4:#282828;
   --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
   --text:#efefef;--text2:#888;--text3:#444;
@@ -18,7 +28,6 @@
   --amber:#ffd166;--amber-dim:rgba(255,209,102,0.1);
   --blue:#74b3ff;--blue-dim:rgba(116,179,255,0.1);
   --red:#ff7b7b;--red-dim:rgba(255,123,123,0.1);
-  --r:14px;--r-sm:8px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overscroll-behavior:none}
@@ -184,6 +193,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
     <div class="header">
       <div class="header-title">日報<span class="dot">.</span></div>
       <div class="sync-dot" id="sd-y"></div>
+      <button class="btn-sm" id="theme-btn" onclick="toggleTheme()">🌙</button>
       <button class="btn-sm accent" onclick="openToday()">今日</button>
       <button class="btn-sm danger" onclick="doSignOut()">退出</button>
     </div>
@@ -577,11 +587,27 @@ function showToast(msg){
   toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
 }
 
+// ── Theme ──
+function toggleTheme(){
+  const isDark = document.documentElement.classList.toggle('dark');
+  document.getElementById('theme-btn').textContent = isDark ? '☀️' : '🌙';
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+}
+function initTheme(){
+  const saved = localStorage.getItem('theme');
+  if(saved === 'dark'){
+    document.documentElement.classList.add('dark');
+    const btn = document.getElementById('theme-btn');
+    if(btn) btn.textContent = '☀️';
+  }
+}
+
 // ── Enter key for auth ──
 document.getElementById('auth-pass').addEventListener('keydown',e=>{ if(e.key==='Enter') doAuth(); });
 
 // ── Init ──
 (async()=>{
+  initTheme();
   showScreen('screen-auth');
   sb.auth.onAuthStateChange(async(event, session)=>{
     if(session?.user){
