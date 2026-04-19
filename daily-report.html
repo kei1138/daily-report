@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="日報">
+<meta name="theme-color" content="#0d0d0d">
+<title>日報</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0d0d;--bg2:#161616;--bg3:#1f1f1f;--bg4:#282828;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#efefef;--text2:#888;--text3:#444;
+  --accent:#a8ff78;--accent2:#78ffd6;--accent-dim:rgba(168,255,120,0.1);
+  --amber:#ffd166;--amber-dim:rgba(255,209,102,0.1);
+  --blue:#74b3ff;--blue-dim:rgba(116,179,255,0.1);
+  --red:#ff7b7b;--red-dim:rgba(255,123,123,0.1);
+  --r:14px;--r-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overscroll-behavior:none}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+.app{display:flex;flex-direction:column;height:100dvh;max-width:480px;margin:0 auto;position:relative;overflow:hidden}
+
+/* Screens */
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg);transition:transform 0.3s cubic-bezier(0.4,0,0.2,1),opacity 0.3s;will-change:transform}
+.screen.hidden{transform:translateX(100%);opacity:0;pointer-events:none}
+.screen.behind{transform:translateX(-28%);opacity:0;pointer-events:none}
+
+/* Header */
+.header{padding:max(env(safe-area-inset-top),16px) 16px 12px;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:10px}
+.header-title{font-size:17px;font-weight:700;letter-spacing:-0.3px;flex:1}
+.header-title .dot{color:var(--accent)}
+.btn-back{width:36px;height:36px;border-radius:10px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.15s}
+.btn-back:active{background:var(--bg3);transform:scale(0.94)}
+.btn-sm{height:34px;padding:0 13px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:12px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;transition:all 0.15s;white-space:nowrap;flex-shrink:0}
+.btn-sm:active{background:var(--bg3);transform:scale(0.95)}
+.btn-sm.accent{background:var(--accent-dim);border-color:rgba(168,255,120,0.3);color:var(--accent)}
+.btn-sm.danger{background:var(--red-dim);border-color:rgba(255,123,123,0.3);color:var(--red)}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background 0.3s}
+.sync-dot.ok{background:var(--accent)}
+.sync-dot.syncing{background:var(--amber);animation:pulse 0.9s infinite}
+.sync-dot.err{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.25}}
+
+/* Search */
+.search-wrap{padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.search-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px 9px 36px;color:var(--text);font-size:14px;font-family:'Noto Sans JP',sans-serif;outline:none;transition:border-color 0.15s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2.5'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:12px center}
+.search-input:focus{border-color:var(--border2)}
+.search-input::placeholder{color:var(--text3)}
+
+/* Scroll content */
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:max(env(safe-area-inset-bottom),16px)}
+.content.hidden{display:none}
+
+/* Auth screen */
+.auth-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:32px 24px;gap:0}
+.auth-logo{font-size:32px;font-weight:700;letter-spacing:-1px;margin-bottom:8px}
+.auth-logo .dot{color:var(--accent)}
+.auth-sub{font-size:13px;color:var(--text3);margin-bottom:40px}
+.auth-card{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:16px}
+.auth-tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:1px solid var(--border)}
+.auth-tab{flex:1;padding:10px;text-align:center;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.15s}
+.auth-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.auth-field{margin-bottom:14px}
+.auth-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:block;font-weight:500;text-transform:uppercase;letter-spacing:0.5px}
+.auth-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 13px;color:var(--text);font-size:15px;font-family:'Noto Sans JP',sans-serif;outline:none;transition:border-color 0.15s}
+.auth-input:focus{border-color:var(--border2)}
+.auth-input::placeholder{color:var(--text3)}
+.auth-btn{width:100%;height:48px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);color:#0a1a10;font-size:15px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer;transition:all 0.15s;margin-top:4px}
+.auth-btn:active{transform:scale(0.97);opacity:0.88}
+.auth-btn:disabled{opacity:0.4;cursor:default}
+.auth-err{font-size:12px;color:var(--red);margin-top:10px;text-align:center;min-height:18px}
+
+/* Year grid */
+.year-nav{display:flex;align-items:center;justify-content:center;gap:24px;padding:14px 20px 8px}
+.year-label{font-size:17px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text)}
+.yr-btn{width:34px;height:34px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s}
+.yr-btn:active{background:var(--bg3)}
+.months-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:4px 14px 16px}
+.month-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px;cursor:pointer;transition:all 0.18s}
+.month-card:active{transform:scale(0.96);background:var(--bg3)}
+.month-card.has-reports{border-color:var(--border2)}
+.month-card-name{font-size:12px;font-weight:700;color:var(--text3);margin-bottom:7px;font-family:'DM Mono',monospace}
+.month-mini{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px}
+.mini-dot{height:6px;border-radius:1px;background:var(--bg4)}
+.mini-dot.filled{background:var(--accent);opacity:0.65}
+.mini-dot.empty-day{background:transparent}
+.month-count{font-size:10px;color:var(--text3)}
+.month-count.has{color:var(--accent);opacity:0.7}
+
+/* Calendar */
+.cal-wrap{padding:8px 10px 10px}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px}
+.cal-wd{text-align:center;font-size:10px;color:var(--text3);padding:3px 0;font-family:'DM Mono',monospace}
+.cal-wd:first-child{color:var(--red)}
+.cal-wd:last-child{color:var(--blue)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-cell{aspect-ratio:1;border-radius:var(--r-sm);background:var(--bg2);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.14s;position:relative}
+.cal-cell:active{transform:scale(0.91)}
+.cal-cell.empty{background:transparent;border-color:transparent;cursor:default}
+.cal-cell.today{border-color:rgba(168,255,120,0.4);background:var(--accent-dim)}
+.cal-cell.today .cal-date{color:var(--accent)}
+.cal-cell.sun .cal-date{color:var(--red)}
+.cal-cell.sat .cal-date{color:var(--blue)}
+.cal-date{font-size:13px;font-weight:500;font-family:'DM Mono',monospace;color:var(--text)}
+.cal-dot{width:4px;height:4px;border-radius:50%;background:var(--accent);margin-top:2px;opacity:0.8}
+
+/* Search results */
+.results-list{padding:10px 14px}
+.result-count{font-size:10px;color:var(--text3);margin-bottom:8px;font-family:'DM Mono',monospace;letter-spacing:0.3px}
+.result-item{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;margin-bottom:7px;cursor:pointer;transition:all 0.14s}
+.result-item:active{background:var(--bg3)}
+.result-date{font-size:11px;color:var(--accent);font-family:'DM Mono',monospace;margin-bottom:4px}
+.result-snippet{font-size:12px;color:var(--text2);line-height:1.55}
+.result-snippet mark{background:rgba(255,209,102,0.2);color:var(--amber);border-radius:2px;padding:0 2px}
+.result-field{font-size:10px;color:var(--text3);margin-right:3px}
+.no-result{text-align:center;padding:40px 20px;color:var(--text3);font-size:13px}
+
+/* Report form */
+.report-date-bar{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.report-date-str{font-size:12px;font-weight:500;font-family:'DM Mono',monospace;color:var(--text2);flex:1}
+.date-nav-btn{width:30px;height:30px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--text3);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.14s}
+.date-nav-btn:active{background:var(--bg3)}
+.form-body{padding:12px 14px}
+.form-section{margin-bottom:13px}
+.form-label{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.6px}
+.form-badge{font-size:9px;padding:2px 5px;border-radius:4px;font-weight:500;text-transform:none;letter-spacing:0}
+.badge-green{background:var(--accent-dim);color:var(--accent)}
+.badge-amber{background:var(--amber-dim);color:var(--amber)}
+.badge-blue{background:var(--blue-dim);color:var(--blue)}
+.form-textarea{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;color:var(--text);font-size:14px;font-family:'Noto Sans JP',sans-serif;line-height:1.65;resize:none;min-height:76px;outline:none;transition:border-color 0.15s}
+.form-textarea:focus{border-color:var(--border2)}
+.form-textarea::placeholder{color:var(--text3)}
+.form-textarea.tall{min-height:96px}
+.notice-bar{margin:0 14px 10px;background:var(--blue-dim);border:1px solid rgba(116,179,255,0.15);border-radius:var(--r-sm);padding:8px 11px;font-size:11px;color:var(--blue);line-height:1.5}
+.save-bar{padding:10px 14px max(env(safe-area-inset-bottom),10px);border-top:1px solid var(--border);flex-shrink:0}
+.btn-save{width:100%;height:48px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);color:#0a1a10;font-size:15px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer;transition:all 0.15s;letter-spacing:-0.3px}
+.btn-save:active{transform:scale(0.97);opacity:0.88}
+.btn-save:disabled{opacity:0.35;cursor:default}
+
+/* Toast */
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--bg4);border:1px solid var(--border2);border-radius:10px;padding:10px 20px;font-size:13px;color:var(--text);opacity:0;transition:all 0.22s;pointer-events:none;white-space:nowrap;z-index:999}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Loading */
+.loading-wrap{display:flex;align-items:center;justify-content:center;height:200px;gap:10px;color:var(--text3);font-size:13px}
+.spinner{width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- AUTH SCREEN -->
+  <div class="screen" id="screen-auth">
+    <div class="auth-wrap">
+      <div class="auth-logo">日報<span class="dot">.</span></div>
+      <div class="auth-sub">あなただけの日報アプリ</div>
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <div class="auth-tab active" id="tab-login" onclick="switchTab('login')">ログイン</div>
+          <div class="auth-tab" id="tab-signup" onclick="switchTab('signup')">新規登録</div>
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">メールアドレス</label>
+          <input class="auth-input" id="auth-email" type="email" placeholder="example@email.com" autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">パスワード</label>
+          <input class="auth-input" id="auth-pass" type="password" placeholder="6文字以上" autocomplete="current-password">
+        </div>
+        <div class="auth-err" id="auth-err"></div>
+        <button class="auth-btn" id="auth-btn" onclick="doAuth()">ログイン</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- YEAR VIEW -->
+  <div class="screen hidden" id="screen-year">
+    <div class="header">
+      <div class="header-title">日報<span class="dot">.</span></div>
+      <div class="sync-dot" id="sd-y"></div>
+      <button class="btn-sm accent" onclick="openToday()">今日</button>
+      <button class="btn-sm danger" onclick="doSignOut()">退出</button>
+    </div>
+    <div class="search-wrap">
+      <input class="search-input" id="search-year" placeholder="キーワード検索（全期間）" type="search" autocomplete="off">
+    </div>
+    <div class="content" id="year-main-content">
+      <div class="year-nav">
+        <button class="yr-btn" onclick="changeYear(-1)">‹</button>
+        <div class="year-label" id="year-label"></div>
+        <button class="yr-btn" onclick="changeYear(1)">›</button>
+      </div>
+      <div class="months-grid" id="months-grid"></div>
+    </div>
+    <div class="content hidden" id="year-search-content"></div>
+  </div>
+
+  <!-- MONTH VIEW -->
+  <div class="screen hidden" id="screen-month">
+    <div class="header">
+      <button class="btn-back" onclick="goTo('year')">‹</button>
+      <div class="header-title" id="month-title"></div>
+      <div class="sync-dot" id="sd-m"></div>
+      <button class="btn-sm accent" onclick="openToday()">今日</button>
+    </div>
+    <div class="search-wrap">
+      <input class="search-input" id="search-month" placeholder="この月をキーワード検索" type="search" autocomplete="off">
+    </div>
+    <div class="content" id="month-main-content">
+      <div class="cal-wrap">
+        <div class="cal-weekdays">
+          <div class="cal-wd">日</div><div class="cal-wd">月</div><div class="cal-wd">火</div>
+          <div class="cal-wd">水</div><div class="cal-wd">木</div><div class="cal-wd">金</div>
+          <div class="cal-wd">土</div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+    </div>
+    <div class="content hidden" id="month-search-content"></div>
+  </div>
+
+  <!-- REPORT VIEW -->
+  <div class="screen hidden" id="screen-report">
+    <div class="header">
+      <button class="btn-back" onclick="goTo('month')">‹</button>
+      <div class="header-title" id="report-title"></div>
+      <div class="sync-dot" id="sd-r"></div>
+    </div>
+    <div class="report-date-bar">
+      <div class="report-date-str" id="report-date-str"></div>
+      <button class="date-nav-btn" onclick="navDay(-1)">‹</button>
+      <button class="date-nav-btn" onclick="navDay(1)">›</button>
+    </div>
+    <div id="notice-bar" class="notice-bar" style="display:none"></div>
+    <div class="content">
+      <div class="form-body">
+        <div class="form-section">
+          <div class="form-label">今日やったこと <span class="form-badge badge-green">前日引用</span></div>
+          <textarea class="form-textarea" id="f-done" placeholder="作業内容..."></textarea>
+        </div>
+        <div class="form-section">
+          <div class="form-label">良かった点 <span class="form-badge badge-green">Good</span></div>
+          <textarea class="form-textarea" id="f-good" placeholder="成果・うまくいった点..."></textarea>
+        </div>
+        <div class="form-section">
+          <div class="form-label">悪かった点 <span class="form-badge badge-amber">Bad</span></div>
+          <textarea class="form-textarea" id="f-bad" placeholder="課題・改善点..."></textarea>
+        </div>
+        <div class="form-section">
+          <div class="form-label">今後に活かす点 <span class="form-badge badge-blue">Learn</span></div>
+          <textarea class="form-textarea" id="f-learn" placeholder="学び・次回に生かすこと..."></textarea>
+        </div>
+        <div class="form-section">
+          <div class="form-label">明日の予定</div>
+          <textarea class="form-textarea" id="f-tomorrow" placeholder="明日の計画..."></textarea>
+        </div>
+        <div class="form-section">
+          <div class="form-label">今後の予定 <span class="form-badge badge-blue">前日引用・編集可</span></div>
+          <textarea class="form-textarea tall" id="f-future" placeholder="今後のタスクや予定..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="save-bar">
+      <button class="btn-save" id="btn-save" onclick="saveReport()">保存</button>
+    </div>
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const SUPABASE_URL = 'https://ultyurokitaaudyevxwp.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_2e02JBiGaQifS-JvyYM56g_UvrW6r2j';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+const WDAYS = '日月火水木金土';
+
+let reports = {};
+let curYear = new Date().getFullYear();
+let curMonth = new Date().getMonth();
+let curDay = null;
+let currentUser = null;
+let authMode = 'login';
+
+// ── Auth ──
+function switchTab(mode) {
+  authMode = mode;
+  document.getElementById('tab-login').classList.toggle('active', mode==='login');
+  document.getElementById('tab-signup').classList.toggle('active', mode==='signup');
+  document.getElementById('auth-btn').textContent = mode==='login' ? 'ログイン' : '登録';
+  document.getElementById('auth-err').textContent = '';
+}
+
+async function doAuth() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass = document.getElementById('auth-pass').value;
+  const errEl = document.getElementById('auth-err');
+  const btn = document.getElementById('auth-btn');
+  if(!email || !pass){ errEl.textContent = 'メールとパスワードを入力してください'; return; }
+  btn.disabled = true;
+  btn.textContent = '処理中...';
+  errEl.textContent = '';
+  try {
+    let res;
+    if(authMode === 'login'){
+      res = await sb.auth.signInWithPassword({email, password:pass});
+    } else {
+      res = await sb.auth.signUp({email, password:pass});
+    }
+    if(res.error) throw res.error;
+    if(authMode === 'signup' && !res.data.session){
+      errEl.style.color = 'var(--accent)';
+      errEl.textContent = '確認メールを送りました。メールを確認してください。';
+      btn.disabled = false;
+      btn.textContent = '登録';
+      return;
+    }
+  } catch(e) {
+    errEl.style.color = 'var(--red)';
+    errEl.textContent = e.message.includes('Invalid') ? 'メールまたはパスワードが正しくありません' : e.message;
+    btn.disabled = false;
+    btn.textContent = authMode==='login' ? 'ログイン' : '登録';
+  }
+}
+
+async function doSignOut() {
+  await sb.auth.signOut();
+  reports = {};
+  showScreen('screen-auth');
+}
+
+// ── Supabase data ──
+function setSync(s) {
+  ['sd-y','sd-m','sd-r'].forEach(id => {
+    const el=document.getElementById(id);
+    if(el) el.className='sync-dot '+s;
+  });
+}
+
+async function loadAll() {
+  if(!currentUser) return;
+  setSync('syncing');
+  try {
+    const {data, error} = await sb.from('reports').select('*').eq('user_id', currentUser.id);
+    if(error) throw error;
+    reports = {};
+    data.forEach(r => { reports[r.id] = r; });
+    setSync('ok');
+  } catch(e) {
+    setSync('err');
+    showToast('読み込みに失敗しました');
+  }
+}
+
+async function upsert(key, data) {
+  if(!currentUser) return false;
+  setSync('syncing');
+  try {
+    const {error} = await sb.from('reports').upsert({
+      id: key,
+      user_id: currentUser.id,
+      ...data,
+      saved_at: new Date().toISOString()
+    }, {onConflict: 'id'});
+    if(error) throw error;
+    reports[key] = {id:key, user_id:currentUser.id, ...data};
+    setSync('ok');
+    return true;
+  } catch(e) {
+    setSync('err');
+    showToast('保存に失敗しました');
+    return false;
+  }
+}
+
+// ── Key helpers ──
+function dk(y,m,d){ return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+function parseDk(k){ const p=k.split('-'); return {y:+p[0],m:+p[1]-1,d:+p[2]}; }
+function todayInfo(){ const t=new Date(); return {y:t.getFullYear(),m:t.getMonth(),d:t.getDate()}; }
+function daysInMonth(y,m){ return new Date(y,m+1,0).getDate(); }
+function prevKey(y,m,d){ const dt=new Date(y,m,d); dt.setDate(dt.getDate()-1); return dk(dt.getFullYear(),dt.getMonth(),dt.getDate()); }
+function getLastFuture(y,m,d){ const prev=reports[prevKey(y,m,d)]; return (prev&&prev.future!=null)?prev.future:''; }
+
+// ── Screens ──
+const SCREEN_ORDER=['screen-auth','screen-year','screen-month','screen-report'];
+function showScreen(id){
+  SCREEN_ORDER.forEach((sid,i)=>{
+    const el=document.getElementById(sid);
+    const ti=SCREEN_ORDER.indexOf(id);
+    if(sid===id){ el.className='screen'; }
+    else if(i<ti){ el.className='screen behind'; }
+    else{ el.className='screen hidden'; }
+  });
+}
+function goTo(target){
+  if(target==='year'){ renderYear(); showScreen('screen-year'); }
+  if(target==='month'){ renderMonth(curYear,curMonth); showScreen('screen-month'); }
+}
+
+// ── Year ──
+function renderYear(){
+  document.getElementById('year-label').textContent=curYear;
+  const grid=document.getElementById('months-grid');
+  grid.innerHTML='';
+  const t=todayInfo();
+  for(let m=0;m<12;m++){
+    const days=daysInMonth(curYear,m);
+    const startDay=new Date(curYear,m,1).getDay();
+    const cnt=Array.from({length:days},(_,i)=>reports[dk(curYear,m,i+1)]).filter(Boolean).length;
+    let mini='';
+    for(let i=0;i<startDay;i++) mini+='<div class="mini-dot empty-day"></div>';
+    for(let d=1;d<=days;d++) mini+=`<div class="mini-dot${reports[dk(curYear,m,d)]?' filled':''}"></div>`;
+    const card=document.createElement('div');
+    card.className='month-card'+(cnt>0||( curYear===t.y&&m===t.m)?' has-reports':'');
+    card.innerHTML=`<div class="month-card-name">${String(m+1).padStart(2,'0')}月</div><div class="month-mini">${mini}</div><div class="month-count${cnt>0?' has':''}">${cnt>0?cnt+'件':''}</div>`;
+    card.onclick=()=>{ curMonth=m; renderMonth(curYear,m); showScreen('screen-month'); };
+    grid.appendChild(card);
+  }
+}
+function changeYear(d){ curYear+=d; renderYear(); }
+
+// ── Month ──
+function renderMonth(y,m){
+  document.getElementById('month-title').textContent=`${y}年 ${MONTHS[m]}`;
+  const grid=document.getElementById('cal-grid');
+  grid.innerHTML='';
+  const t=todayInfo();
+  const days=daysInMonth(y,m);
+  const startDay=new Date(y,m,1).getDay();
+  for(let i=0;i<startDay;i++){
+    const el=document.createElement('div'); el.className='cal-cell empty'; grid.appendChild(el);
+  }
+  for(let d=1;d<=days;d++){
+    const dow=(startDay+d-1)%7;
+    const isToday=y===t.y&&m===t.m&&d===t.d;
+    const hasR=!!reports[dk(y,m,d)];
+    const cell=document.createElement('div');
+    cell.className=`cal-cell${isToday?' today':''}${dow===0?' sun':dow===6?' sat':''}`;
+    cell.innerHTML=`<div class="cal-date">${d}</div>${hasR?'<div class="cal-dot"></div>':''}`;
+    cell.onclick=()=>openReport(y,m,d);
+    grid.appendChild(cell);
+  }
+}
+
+// ── Report ──
+function openReport(y,m,d){
+  curYear=y; curMonth=m; curDay=d;
+  const key=dk(y,m,d);
+  const r=reports[key]||{};
+  document.getElementById('report-title').textContent=`${MONTHS[m]}${d}日`;
+  document.getElementById('report-date-str').textContent=`${y}年${MONTHS[m]}${d}日（${WDAYS[new Date(y,m,d).getDay()]}）`;
+  const prev=reports[prevKey(y,m,d)];
+  const notice=document.getElementById('notice-bar');
+  if(!r.done&&prev?.tomorrow){
+    document.getElementById('f-done').value=prev.tomorrow;
+    notice.style.display='';
+    notice.textContent='前日の「明日の予定」を引用しています。編集できます。';
+  } else {
+    document.getElementById('f-done').value=r.done||'';
+    notice.style.display='none';
+  }
+  document.getElementById('f-tomorrow').value=r.tomorrow||'';
+  document.getElementById('f-good').value=r.good||'';
+  document.getElementById('f-bad').value=r.bad||'';
+  document.getElementById('f-learn').value=r.learn||'';
+  document.getElementById('f-future').value=r.future!=null?r.future:getLastFuture(y,m,d);
+  showScreen('screen-report');
+}
+
+function openToday(){ const t=todayInfo(); curYear=t.y; curMonth=t.m; renderMonth(t.y,t.m); openReport(t.y,t.m,t.d); }
+
+function navDay(dir){
+  const dt=new Date(curYear,curMonth,curDay); dt.setDate(dt.getDate()+dir);
+  openReport(dt.getFullYear(),dt.getMonth(),dt.getDate());
+}
+
+async function saveReport(){
+  const btn=document.getElementById('btn-save');
+  btn.disabled=true; btn.textContent='保存中...';
+  const ok=await upsert(dk(curYear,curMonth,curDay),{
+    done:document.getElementById('f-done').value,
+    tomorrow:document.getElementById('f-tomorrow').value,
+    good:document.getElementById('f-good').value,
+    bad:document.getElementById('f-bad').value,
+    learn:document.getElementById('f-learn').value,
+    future:document.getElementById('f-future').value,
+  });
+  btn.disabled=false;
+  if(ok){
+    document.getElementById('notice-bar').style.display='none';
+    btn.textContent='保存しました ✓';
+    showToast('保存しました');
+    setTimeout(()=>btn.textContent='保存',2200);
+  } else {
+    btn.textContent='再試行';
+  }
+}
+
+// ── Search ──
+const FIELD_LABELS={done:'やったこと',tomorrow:'明日',good:'良かった点',bad:'悪かった点',learn:'活かす点',future:'今後の予定'};
+const FIELDS=Object.keys(FIELD_LABELS);
+function doSearch(q,scope){
+  if(!q.trim()) return [];
+  const ql=q.toLowerCase();
+  return Object.entries(reports)
+    .filter(([k])=>{ if(!scope) return true; const p=parseDk(k); return p.y===scope.y&&p.m===scope.m; })
+    .map(([k,r])=>{ const hits=FIELDS.filter(f=>r[f]?.toLowerCase().includes(ql)).map(f=>({f,text:r[f]})); return {k,hits}; })
+    .filter(({hits})=>hits.length)
+    .sort((a,b)=>b.k.localeCompare(a.k));
+}
+function hlText(text,q){
+  const i=text.toLowerCase().indexOf(q.toLowerCase());
+  if(i<0) return text.slice(0,55)+'…';
+  const s=Math.max(0,i-12),e=Math.min(text.length,i+q.length+32);
+  return (s>0?'…':'')+text.slice(s,e).replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<mark>${m}</mark>`)+(e<text.length?'…':'');
+}
+function renderSearch(results,q,contentId,mainId){
+  const rc=document.getElementById(contentId);
+  const mc=document.getElementById(mainId);
+  if(!q.trim()){ rc.classList.add('hidden'); mc.classList.remove('hidden'); return; }
+  rc.classList.remove('hidden'); mc.classList.add('hidden');
+  if(!results.length){ rc.innerHTML='<div class="no-result">一致する日報が見つかりませんでした</div>'; return; }
+  rc.innerHTML='<div class="results-list"><div class="result-count">'+results.length+'件ヒット</div>'+
+    results.map(({k,hits})=>{
+      const p=parseDk(k);
+      const dateStr=`${p.y}年${MONTHS[p.m]}${p.d}日`;
+      const snip=hits.slice(0,2).map(({f,text})=>`<span class="result-field">[${FIELD_LABELS[f]}]</span>${hlText(text,q)}`).join('<br>');
+      return `<div class="result-item" onclick="openReport(${p.y},${p.m},${p.d})"><div class="result-date">${dateStr}</div><div class="result-snippet">${snip}</div></div>`;
+    }).join('')+'</div>';
+}
+document.getElementById('search-year').addEventListener('input',function(){
+  renderSearch(doSearch(this.value,null),this.value,'year-search-content','year-main-content');
+});
+document.getElementById('search-month').addEventListener('input',function(){
+  renderSearch(doSearch(this.value,{y:curYear,m:curMonth}),this.value,'month-search-content','month-main-content');
+});
+
+// ── Toast ──
+let toastTimer;
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+// ── Enter key for auth ──
+document.getElementById('auth-pass').addEventListener('keydown',e=>{ if(e.key==='Enter') doAuth(); });
+
+// ── Init ──
+(async()=>{
+  showScreen('screen-auth');
+  sb.auth.onAuthStateChange(async(event, session)=>{
+    if(session?.user){
+      currentUser=session.user;
+      await loadAll();
+      renderYear();
+      showScreen('screen-year');
+    } else {
+      currentUser=null;
+      reports={};
+      showScreen('screen-auth');
+    }
+  });
+})();
+</script>
+</body>
+</html>
