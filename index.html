@@ -308,32 +308,54 @@ async function doAuth() {
   btn.disabled = true;
   btn.textContent = '処理中...';
   errEl.textContent = '';
+  errEl.style.color = 'var(--red)';
+
+  const timeout = new Promise((_,reject) => setTimeout(()=>reject(new Error('タイムアウト。再度お試しください')), 10000));
+
   try {
     let res;
     if(authMode === 'login'){
-      res = await sb.auth.signInWithPassword({email, password:pass});
+      res = await Promise.race([sb.auth.signInWithPassword({email, password:pass}), timeout]);
+      if(res.error) throw res.error;
+      if(res.data?.session){
+        currentUser = res.data.session.user;
+        await loadAll();
+        renderYear();
+        showScreen('screen-year');
+      }
     } else {
-      res = await sb.auth.signUp({email, password:pass});
-    }
-    if(res.error) throw res.error;
-    if(authMode === 'signup' && !res.data.session){
-      errEl.style.color = 'var(--accent)';
-      errEl.textContent = '確認メールを送りました。メールを確認してください。';
-      btn.disabled = false;
-      btn.textContent = '登録';
-      return;
+      res = await Promise.race([sb.auth.signUp({email, password:pass}), timeout]);
+      if(res.error) throw res.error;
+      if(res.data?.session){
+        currentUser = res.data.session.user;
+        await loadAll();
+        renderYear();
+        showScreen('screen-year');
+      } else {
+        errEl.style.color = 'var(--accent)';
+        errEl.textContent = '登録しました！ログインタブからログインしてください。';
+        btn.disabled = false;
+        btn.textContent = '登録';
+        return;
+      }
     }
   } catch(e) {
-    errEl.style.color = 'var(--red)';
-    errEl.textContent = e.message.includes('Invalid') ? 'メールまたはパスワードが正しくありません' : e.message;
+    let msg = e.message || 'エラーが発生しました';
+    if(msg.includes('Invalid login')) msg = 'メールまたはパスワードが正しくありません';
+    if(msg.includes('Email not confirmed')) msg = 'メール認証が完了していません';
+    if(msg.includes('User already registered')) msg = 'このメールはすでに登録済みです';
+    errEl.textContent = msg;
     btn.disabled = false;
     btn.textContent = authMode==='login' ? 'ログイン' : '登録';
   }
 }
 
 async function doSignOut() {
-  await sb.auth.signOut();
+  try {
+    await sb.auth.signOut();
+  } catch(e) {}
   reports = {};
+  currentUser = null;
   showScreen('screen-auth');
 }
 
