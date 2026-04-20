@@ -80,6 +80,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .auth-msg.ok{color:var(--accent)}
 
 /* Year */
+.user-email-bar{padding:6px 16px;border-bottom:1px solid var(--border);font-size:11px;color:var(--text3);font-family:'DM Mono',monospace}
 .year-nav{display:flex;align-items:center;justify-content:center;gap:24px;padding:14px 20px 8px}
 .year-label{font-size:17px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text)}
 .yr-btn{width:34px;height:34px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s}
@@ -140,16 +141,36 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .form-textarea:focus{border-color:var(--border2)}
 .form-textarea::placeholder{color:var(--text3)}
 .form-textarea.tall{min-height:96px}
+.form-textarea.memo{min-height:60px;background:var(--bg3)}
 .notice-bar{margin:0 14px 10px;background:var(--blue-dim);border:1px solid var(--blue);border-radius:var(--r-sm);padding:8px 11px;font-size:11px;color:var(--blue);line-height:1.5;opacity:0.8}
 .save-bar{padding:10px 14px max(env(safe-area-inset-bottom),10px);border-top:1px solid var(--border);flex-shrink:0}
 .btn-save{width:100%;height:48px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);color:#fff;font-size:15px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer;transition:all 0.15s}
 .btn-save:active{transform:scale(0.97);opacity:0.88}
 .btn-save:disabled{opacity:0.35;cursor:default}
 
+/* Settings screen */
+.settings-body{padding:16px 14px}
+.settings-section-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;margin-top:20px}
+.settings-section-title:first-child{margin-top:0}
+.field-item{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:6px}
+.field-item-name{flex:1;font-size:14px;color:var(--text)}
+.field-item-badge{font-size:10px;padding:2px 6px;border-radius:4px;background:var(--bg3);color:var(--text3)}
+.field-move-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.14s}
+.field-move-btn:active{background:var(--bg3)}
+.field-del-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--red-dim);background:var(--red-dim);color:var(--red);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.14s}
+.field-del-btn:active{opacity:0.7}
+.add-field-wrap{display:flex;gap:8px;margin-top:8px}
+.add-field-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;color:var(--text);font-size:14px;font-family:'Noto Sans JP',sans-serif;outline:none}
+.add-field-input:focus{border-color:var(--border2)}
+.add-field-input::placeholder{color:var(--text3)}
+.add-field-btn{height:42px;padding:0 16px;border-radius:var(--r-sm);border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer;white-space:nowrap}
+.settings-save-bar{padding:10px 14px max(env(safe-area-inset-bottom),10px);border-top:1px solid var(--border);flex-shrink:0}
+.settings-save-btn{width:100%;height:48px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);color:#fff;font-size:15px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer;transition:all 0.15s}
+.settings-save-btn:active{transform:scale(0.97);opacity:0.88}
+
 /* Toast */
 .toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--bg4);border:1px solid var(--border2);border-radius:10px;padding:10px 20px;font-size:13px;color:var(--text);opacity:0;transition:all 0.22s;pointer-events:none;white-space:nowrap;z-index:999}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.spinner{width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
@@ -192,7 +213,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
       <button class="btn-sm accent" onclick="openToday()">今日</button>
       <button class="btn-sm danger" onclick="doSignOut()">退出</button>
     </div>
-    <div style="padding:6px 16px;border-bottom:1px solid var(--border);font-size:11px;color:var(--text3);font-family:'DM Mono',monospace" id="user-email-bar"></div>
+    <div class="user-email-bar" id="user-email-bar"></div>
     <div class="search-wrap">
       <input class="search-input" id="search-year" placeholder="キーワード検索（全期間）" type="search" autocomplete="off">
     </div>
@@ -237,6 +258,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
       <button class="btn-back" onclick="goTo('month')">‹</button>
       <div class="header-title" id="report-title"></div>
       <div class="sync-dot" id="sd-r"></div>
+      <button class="btn-sm" onclick="showScreen('screen-settings')">⚙️</button>
     </div>
     <div class="report-date-bar">
       <div class="report-date-str" id="report-date-str"></div>
@@ -245,35 +267,34 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
     </div>
     <div id="notice-bar" class="notice-bar" style="display:none"></div>
     <div class="content">
-      <div class="form-body">
-        <div class="form-section">
-          <div class="form-label">今日やったこと <span class="form-badge badge-green">前日引用</span></div>
-          <textarea class="form-textarea" id="f-done" placeholder="作業内容..."></textarea>
-        </div>
-        <div class="form-section">
-          <div class="form-label">良かった点 <span class="form-badge badge-green">Good</span></div>
-          <textarea class="form-textarea" id="f-good" placeholder="成果・うまくいった点..."></textarea>
-        </div>
-        <div class="form-section">
-          <div class="form-label">悪かった点 <span class="form-badge badge-amber">Bad</span></div>
-          <textarea class="form-textarea" id="f-bad" placeholder="課題・改善点..."></textarea>
-        </div>
-        <div class="form-section">
-          <div class="form-label">今後に活かす点 <span class="form-badge badge-blue">Learn</span></div>
-          <textarea class="form-textarea" id="f-learn" placeholder="学び・次回に生かすこと..."></textarea>
-        </div>
-        <div class="form-section">
-          <div class="form-label">明日の予定</div>
-          <textarea class="form-textarea" id="f-tomorrow" placeholder="明日の計画..."></textarea>
-        </div>
-        <div class="form-section">
-          <div class="form-label">今後の予定 <span class="form-badge badge-blue">前日引用・編集可</span></div>
-          <textarea class="form-textarea tall" id="f-future" placeholder="今後のタスクや予定..."></textarea>
-        </div>
-      </div>
+      <div class="form-body" id="form-body"></div>
     </div>
     <div class="save-bar">
       <button class="btn-save" id="btn-save" onclick="saveReport()">保存</button>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="screen hidden" id="screen-settings">
+    <div class="header">
+      <button class="btn-back" onclick="showScreen('screen-report')">‹</button>
+      <div class="header-title">項目設定</div>
+    </div>
+    <div class="content">
+      <div class="settings-body">
+        <div class="settings-section-title">表示中の項目（並び替え・削除できます）</div>
+        <div id="fields-list"></div>
+        <div class="settings-section-title">項目を追加</div>
+        <div class="add-field-wrap">
+          <input class="add-field-input" id="new-field-input" placeholder="項目名を入力..." type="text">
+          <button class="add-field-btn" onclick="addField()">追加</button>
+        </div>
+        <div class="settings-section-title">デフォルト項目を戻す</div>
+        <button class="btn-sm" onclick="resetFields()" style="width:100%;height:40px;justify-content:center">デフォルトに戻す</button>
+      </div>
+    </div>
+    <div class="settings-save-bar">
+      <button class="settings-save-btn" onclick="saveSettings()">設定を保存</button>
     </div>
   </div>
 
@@ -289,12 +310,23 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
 const WDAYS = '日月火水木金土';
 
+const DEFAULT_FIELDS = [
+  {id:'done', label:'今日やったこと', badge:'前日引用', badgeColor:'green'},
+  {id:'good', label:'良かった点', badge:'Good', badgeColor:'green'},
+  {id:'bad', label:'悪かった点', badge:'Bad', badgeColor:'amber'},
+  {id:'learn', label:'今後に活かす点', badge:'Learn', badgeColor:'blue'},
+  {id:'tomorrow', label:'明日の予定', badge:'', badgeColor:''},
+  {id:'future', label:'今後の予定', badge:'前日引用・編集可', badgeColor:'blue'},
+];
+
 let reports = {};
 let curYear = new Date().getFullYear();
 let curMonth = new Date().getMonth();
 let curDay = null;
 let currentUser = null;
 let authMode = 'login';
+let userFields = JSON.parse(JSON.stringify(DEFAULT_FIELDS));
+let tempFields = [];
 
 // ── Theme ──
 function toggleTheme(){
@@ -324,21 +356,17 @@ function switchTab(mode){
   document.getElementById('auth-btn').textContent=mode==='login'?'ログイン':'登録';
   setAuthMsg('','');
 }
-
-function setAuthMsg(msg, type){
+function setAuthMsg(msg,type){
   const el=document.getElementById('auth-msg');
   el.textContent=msg;
   el.className='auth-msg'+(type?' '+type:'');
 }
-
 async function doAuth(){
   const email=document.getElementById('auth-email').value.trim();
   const pass=document.getElementById('auth-pass').value;
   const btn=document.getElementById('auth-btn');
   if(!email||!pass){ setAuthMsg('メールとパスワードを入力してください','err'); return; }
-  btn.disabled=true;
-  btn.textContent='処理中...';
-  setAuthMsg('','');
+  btn.disabled=true; btn.textContent='処理中...'; setAuthMsg('','');
   const T=15000;
   const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('タイムアウト。再度お試しください')),T));
   try{
@@ -348,7 +376,7 @@ async function doAuth(){
       if(res.error) throw res.error;
       if(res.data?.session){
         currentUser=res.data.session.user;
-        await loadAll();
+        await Promise.all([loadAll(), loadSettings()]);
         renderYear();
         showScreen('screen-year');
         return;
@@ -358,15 +386,13 @@ async function doAuth(){
       if(res.error) throw res.error;
       if(res.data?.session){
         currentUser=res.data.session.user;
-        await loadAll();
+        await Promise.all([loadAll(), loadSettings()]);
         renderYear();
         showScreen('screen-year');
         return;
       } else {
         setAuthMsg('登録しました！ログインタブからログインしてください。','ok');
-        btn.disabled=false;
-        btn.textContent='登録';
-        return;
+        btn.disabled=false; btn.textContent='登録'; return;
       }
     }
     throw new Error('ログインに失敗しました');
@@ -380,11 +406,9 @@ async function doAuth(){
     btn.textContent=authMode==='login'?'ログイン':'登録';
   }
 }
-
 async function doSignOut(){
   try{ await sb.auth.signOut(); }catch(e){}
-  currentUser=null;
-  reports={};
+  currentUser=null; reports={}; userFields=JSON.parse(JSON.stringify(DEFAULT_FIELDS));
   showScreen('screen-auth');
 }
 
@@ -395,7 +419,6 @@ function setSync(s){
     if(el) el.className='sync-dot '+s;
   });
 }
-
 async function loadAll(){
   if(!currentUser) return;
   setSync('syncing');
@@ -411,24 +434,13 @@ async function loadAll(){
     setSync('ok');
   }catch(e){
     setSync('err');
-    showToast('データ読み込みに失敗しました。再試行してください。');
+    showToast('データ読み込みに失敗しました。');
   }
 }
-
 async function upsert(key,data){
   if(!currentUser){ showToast('ログインが必要です'); return false; }
   setSync('syncing');
-  const payload={
-    id:key,
-    user_id:currentUser.id,
-    done:data.done||null,
-    tomorrow:data.tomorrow||null,
-    good:data.good||null,
-    bad:data.bad||null,
-    learn:data.learn||null,
-    future:data.future||null,
-    saved_at:new Date().toISOString()
-  };
+  const payload={id:key,user_id:currentUser.id,...data,saved_at:new Date().toISOString()};
   try{
     const {error}=await sb.from('reports').upsert(payload,{onConflict:'id,user_id'});
     if(error) throw error;
@@ -436,7 +448,6 @@ async function upsert(key,data){
     setSync('ok');
     return true;
   }catch(e){
-    // upsertが失敗した場合はinsertを試みる
     try{
       const {error:e2}=await sb.from('reports').insert(payload);
       if(e2) throw e2;
@@ -451,6 +462,83 @@ async function upsert(key,data){
   }
 }
 
+// ── Settings ──
+async function loadSettings(){
+  if(!currentUser) return;
+  try{
+    const {data,error}=await sb.from('user_settings').select('fields').eq('user_id',currentUser.id).single();
+    if(error || !data || !data.fields) {
+      userFields=JSON.parse(JSON.stringify(DEFAULT_FIELDS));
+      return;
+    }
+    userFields=data.fields;
+  }catch(e){
+    userFields=JSON.parse(JSON.stringify(DEFAULT_FIELDS));
+  }
+}
+async function saveSettings(){
+  if(!currentUser) return;
+  try{
+    const {error}=await sb.from('user_settings').upsert({
+      user_id:currentUser.id,
+      fields:tempFields,
+      updated_at:new Date().toISOString()
+    },{onConflict:'user_id'});
+    if(error) throw error;
+    userFields=JSON.parse(JSON.stringify(tempFields));
+    showToast('設定を保存しました');
+    showScreen('screen-report');
+    openReport(curYear,curMonth,curDay);
+  }catch(e){
+    showToast('保存に失敗しました: '+e.message);
+  }
+}
+function openSettings(){
+  tempFields=JSON.parse(JSON.stringify(userFields));
+  renderFieldsList();
+  showScreen('screen-settings');
+}
+function renderFieldsList(){
+  const list=document.getElementById('fields-list');
+  list.innerHTML='';
+  tempFields.forEach((f,i)=>{
+    const item=document.createElement('div');
+    item.className='field-item';
+    const isDefault=DEFAULT_FIELDS.some(d=>d.id===f.id);
+    item.innerHTML=`
+      <div class="field-item-name">${f.label}</div>
+      ${isDefault?'<span class="field-item-badge">デフォルト</span>':''}
+      <button class="field-move-btn" onclick="moveField(${i},-1)" ${i===0?'disabled':''}>↑</button>
+      <button class="field-move-btn" onclick="moveField(${i},1)" ${i===tempFields.length-1?'disabled':''}>↓</button>
+      <button class="field-del-btn" onclick="deleteField(${i})">×</button>
+    `;
+    list.appendChild(item);
+  });
+}
+function moveField(i,dir){
+  const j=i+dir;
+  if(j<0||j>=tempFields.length) return;
+  [tempFields[i],tempFields[j]]=[tempFields[j],tempFields[i]];
+  renderFieldsList();
+}
+function deleteField(i){
+  tempFields.splice(i,1);
+  renderFieldsList();
+}
+function addField(){
+  const input=document.getElementById('new-field-input');
+  const label=input.value.trim();
+  if(!label){ showToast('項目名を入力してください'); return; }
+  const id='custom_'+Date.now();
+  tempFields.push({id,label,badge:'',badgeColor:''});
+  input.value='';
+  renderFieldsList();
+}
+function resetFields(){
+  tempFields=JSON.parse(JSON.stringify(DEFAULT_FIELDS));
+  renderFieldsList();
+}
+
 // ── Key helpers ──
 function dk(y,m,d){ return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
 function parseDk(k){ const p=k.split('-'); return {y:+p[0],m:+p[1]-1,d:+p[2]}; }
@@ -460,13 +548,14 @@ function prevKey(y,m,d){ const dt=new Date(y,m,d); dt.setDate(dt.getDate()-1); r
 function getLastFuture(y,m,d){ const prev=reports[prevKey(y,m,d)]; return (prev&&prev.future!=null)?prev.future:''; }
 
 // ── Screens ──
-const SCREEN_ORDER=['screen-auth','screen-year','screen-month','screen-report'];
+const SCREEN_ORDER=['screen-auth','screen-year','screen-month','screen-report','screen-settings'];
 function showScreen(id){
   SCREEN_ORDER.forEach((sid,i)=>{
     const el=document.getElementById(sid);
     const ti=SCREEN_ORDER.indexOf(id);
     el.className='screen'+(sid===id?'':(i<ti?' behind':' hidden'));
   });
+  if(id==='screen-settings') openSettings();
 }
 function goTo(target){
   if(target==='year'){ renderYear(); showScreen('screen-year'); }
@@ -521,27 +610,59 @@ function renderMonth(y,m){
 }
 
 // ── Report ──
+function buildForm(r){
+  const body=document.getElementById('form-body');
+  body.innerHTML='';
+  const prev=reports[prevKey(curYear,curMonth,curDay)];
+  const notice=document.getElementById('notice-bar');
+
+  userFields.forEach(f=>{
+    const section=document.createElement('div');
+    section.className='form-section';
+    const badgeHtml=f.badge?`<span class="form-badge badge-${f.badgeColor}">${f.badge}</span>`:'';
+    const isTall=f.id==='future';
+    let val='';
+    if(f.id==='done'){
+      if(!r.done&&prev?.tomorrow){ val=prev.tomorrow; }
+      else { val=r.done||''; }
+    } else if(f.id==='future'){
+      val=r.future!=null?r.future:getLastFuture(curYear,curMonth,curDay);
+    } else {
+      val=r[f.id]||'';
+    }
+    section.innerHTML=`
+      <div class="form-label">${f.label} ${badgeHtml}</div>
+      <textarea class="form-textarea${isTall?' tall':''}" id="f-${f.id}" placeholder="${f.label}...">${val}</textarea>
+    `;
+    body.appendChild(section);
+  });
+
+  // 前日引用の通知
+  const doneEl=document.getElementById('f-done');
+  if(doneEl&&!r.done&&prev?.tomorrow){
+    notice.style.display='';
+    notice.textContent='前日の「明日の予定」を引用しています。編集できます。';
+  } else {
+    notice.style.display='none';
+  }
+
+  // メモ欄（固定）
+  const memoSection=document.createElement('div');
+  memoSection.className='form-section';
+  memoSection.innerHTML=`
+    <div class="form-label">メモ</div>
+    <textarea class="form-textarea memo" id="f-memo" placeholder="自由メモ...">${r.memo||''}</textarea>
+  `;
+  body.appendChild(memoSection);
+}
+
 function openReport(y,m,d){
   curYear=y; curMonth=m; curDay=d;
   const key=dk(y,m,d);
   const r=reports[key]||{};
   document.getElementById('report-title').textContent=`${MONTHS[m]}${d}日`;
   document.getElementById('report-date-str').textContent=`${y}年${MONTHS[m]}${d}日（${WDAYS[new Date(y,m,d).getDay()]}）`;
-  const prev=reports[prevKey(y,m,d)];
-  const notice=document.getElementById('notice-bar');
-  if(!r.done&&prev?.tomorrow){
-    document.getElementById('f-done').value=prev.tomorrow;
-    notice.style.display='';
-    notice.textContent='前日の「明日の予定」を引用しています。編集できます。';
-  } else {
-    document.getElementById('f-done').value=r.done||'';
-    notice.style.display='none';
-  }
-  document.getElementById('f-tomorrow').value=r.tomorrow||'';
-  document.getElementById('f-good').value=r.good||'';
-  document.getElementById('f-bad').value=r.bad||'';
-  document.getElementById('f-learn').value=r.learn||'';
-  document.getElementById('f-future').value=r.future!=null?r.future:getLastFuture(y,m,d);
+  buildForm(r);
   showScreen('screen-report');
 }
 
@@ -555,14 +676,14 @@ function navDay(dir){
 async function saveReport(){
   const btn=document.getElementById('btn-save');
   btn.disabled=true; btn.textContent='保存中...';
-  const ok=await upsert(dk(curYear,curMonth,curDay),{
-    done:document.getElementById('f-done').value,
-    tomorrow:document.getElementById('f-tomorrow').value,
-    good:document.getElementById('f-good').value,
-    bad:document.getElementById('f-bad').value,
-    learn:document.getElementById('f-learn').value,
-    future:document.getElementById('f-future').value,
+  const data={};
+  userFields.forEach(f=>{
+    const el=document.getElementById('f-'+f.id);
+    if(el) data[f.id]=el.value||null;
   });
+  const memoEl=document.getElementById('f-memo');
+  if(memoEl) data.memo=memoEl.value||null;
+  const ok=await upsert(dk(curYear,curMonth,curDay),data);
   btn.disabled=false;
   if(ok){
     document.getElementById('notice-bar').style.display='none';
@@ -575,14 +696,18 @@ async function saveReport(){
 }
 
 // ── Search ──
-const FIELD_LABELS={done:'やったこと',tomorrow:'明日',good:'良かった点',bad:'悪かった点',learn:'活かす点',future:'今後の予定'};
-const FIELDS=Object.keys(FIELD_LABELS);
+function getSearchableText(r){
+  const texts=[];
+  userFields.forEach(f=>{ if(r[f.id]) texts.push({f:f.id,label:f.label,text:r[f.id]}); });
+  if(r.memo) texts.push({f:'memo',label:'メモ',text:r.memo});
+  return texts;
+}
 function doSearch(q,scope){
   if(!q.trim()) return [];
   const ql=q.toLowerCase();
   return Object.entries(reports)
     .filter(([k])=>{ if(!scope) return true; const p=parseDk(k); return p.y===scope.y&&p.m===scope.m; })
-    .map(([k,r])=>{ const hits=FIELDS.filter(f=>r[f]?.toLowerCase().includes(ql)).map(f=>({f,text:r[f]})); return {k,hits}; })
+    .map(([k,r])=>{ const hits=getSearchableText(r).filter(t=>t.text.toLowerCase().includes(ql)); return {k,hits}; })
     .filter(({hits})=>hits.length)
     .sort((a,b)=>b.k.localeCompare(a.k));
 }
@@ -601,7 +726,7 @@ function renderSearch(results,q,contentId,mainId){
   rc.innerHTML='<div class="results-list"><div class="result-count">'+results.length+'件ヒット</div>'+
     results.map(({k,hits})=>{
       const p=parseDk(k);
-      const snip=hits.slice(0,2).map(({f,text})=>`<span class="result-field">[${FIELD_LABELS[f]}]</span>${hlText(text,q)}`).join('<br>');
+      const snip=hits.slice(0,2).map(({label,text})=>`<span class="result-field">[${label}]</span>${hlText(text,q)}`).join('<br>');
       return `<div class="result-item" onclick="openReport(${p.y},${p.m},${p.d})"><div class="result-date">${p.y}年${MONTHS[p.m]}${p.d}日</div><div class="result-snippet">${snip}</div></div>`;
     }).join('')+'</div>';
 }
@@ -628,21 +753,16 @@ document.getElementById('auth-pass').addEventListener('keydown',e=>{ if(e.key===
 (async()=>{
   initTheme();
   showScreen('screen-auth');
-
-  // 既存セッションを確認
   const {data:{session}}=await sb.auth.getSession();
   if(session?.user){
     currentUser=session.user;
-    await loadAll();
+    await Promise.all([loadAll(),loadSettings()]);
     renderYear();
     showScreen('screen-year');
   }
-
-  // セッション変化を監視（サインアウト時のみ対応）
   sb.auth.onAuthStateChange((event,session)=>{
     if(event==='SIGNED_OUT'){
-      currentUser=null;
-      reports={};
+      currentUser=null; reports={}; userFields=JSON.parse(JSON.stringify(DEFAULT_FIELDS));
       showScreen('screen-auth');
     }
   });
