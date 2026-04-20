@@ -258,7 +258,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
       <button class="btn-back" onclick="goTo('month')">‹</button>
       <div class="header-title" id="report-title"></div>
       <div class="sync-dot" id="sd-r"></div>
-      <button class="btn-sm" onclick="showScreen('screen-settings')">⚙️</button>
+      <button class="btn-sm" onclick="openSettingsScreen()">⚙️</button>
     </div>
     <div class="report-date-bar">
       <div class="report-date-str" id="report-date-str"></div>
@@ -466,12 +466,12 @@ async function upsert(key,data){
 async function loadSettings(){
   if(!currentUser) return;
   try{
-    const {data,error}=await sb.from('user_settings').select('fields').eq('user_id',currentUser.id).single();
-    if(error || !data || !data.fields) {
+    const {data,error}=await sb.from('user_settings').select('fields').eq('user_id',currentUser.id).maybeSingle();
+    if(!error && data && data.fields && Array.isArray(data.fields) && data.fields.length>0){
+      userFields=data.fields;
+    } else {
       userFields=JSON.parse(JSON.stringify(DEFAULT_FIELDS));
-      return;
     }
-    userFields=data.fields;
   }catch(e){
     userFields=JSON.parse(JSON.stringify(DEFAULT_FIELDS));
   }
@@ -555,11 +555,15 @@ function showScreen(id){
     const ti=SCREEN_ORDER.indexOf(id);
     el.className='screen'+(sid===id?'':(i<ti?' behind':' hidden'));
   });
-  if(id==='screen-settings') openSettings();
 }
 function goTo(target){
   if(target==='year'){ renderYear(); showScreen('screen-year'); }
   if(target==='month'){ renderMonth(curYear,curMonth); showScreen('screen-month'); }
+}
+function openSettingsScreen(){
+  tempFields=JSON.parse(JSON.stringify(userFields.length>0?userFields:DEFAULT_FIELDS));
+  renderFieldsList();
+  showScreen('screen-settings');
 }
 
 // ── Year ──
