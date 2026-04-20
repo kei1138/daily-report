@@ -500,20 +500,17 @@ function openSettings(){
 }
 function renderFieldsList(){
   const list=document.getElementById('fields-list');
-  list.innerHTML='';
-  tempFields.forEach((f,i)=>{
-    const item=document.createElement('div');
-    item.className='field-item';
+  const html=tempFields.map((f,i)=>{
     const isDefault=DEFAULT_FIELDS.some(d=>d.id===f.id);
-    item.innerHTML=`
+    return `<div class="field-item">
       <div class="field-item-name">${f.label}</div>
       ${isDefault?'<span class="field-item-badge">デフォルト</span>':''}
       <button class="field-move-btn" onclick="moveField(${i},-1)" ${i===0?'disabled':''}>↑</button>
       <button class="field-move-btn" onclick="moveField(${i},1)" ${i===tempFields.length-1?'disabled':''}>↓</button>
       <button class="field-del-btn" onclick="deleteField(${i})">×</button>
-    `;
-    list.appendChild(item);
-  });
+    </div>`;
+  }).join('');
+  list.innerHTML=html;
 }
 function moveField(i,dir){
   const j=i+dir;
@@ -561,7 +558,10 @@ function goTo(target){
   if(target==='month'){ renderMonth(curYear,curMonth); showScreen('screen-month'); }
 }
 function openSettingsScreen(){
-  tempFields=JSON.parse(JSON.stringify(userFields.length>0?userFields:DEFAULT_FIELDS));
+  if(!userFields || userFields.length===0){
+    userFields=JSON.parse(JSON.stringify(DEFAULT_FIELDS));
+  }
+  tempFields=JSON.parse(JSON.stringify(userFields));
   renderFieldsList();
   showScreen('screen-settings');
 }
