@@ -137,6 +137,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .badge-green{background:var(--accent-dim);color:var(--accent)}
 .badge-amber{background:var(--amber-dim);color:var(--amber)}
 .badge-blue{background:var(--blue-dim);color:var(--blue)}
+.badge-red{background:var(--red-dim);color:var(--red)}
 .form-textarea{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;color:var(--text);font-size:14px;font-family:'Noto Sans JP',sans-serif;line-height:1.65;resize:none;min-height:76px;outline:none;transition:border-color 0.15s}
 .form-textarea:focus{border-color:var(--border2)}
 .form-textarea::placeholder{color:var(--text3)}
@@ -287,6 +288,19 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
         <div class="settings-section-title">項目を追加</div>
         <div class="add-field-wrap">
           <input class="add-field-input" id="new-field-input" placeholder="項目名を入力..." type="text">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input class="add-field-input" id="new-badge-input" placeholder="バッジ名（任意）" type="text" style="flex:1">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+          <span style="font-size:11px;color:var(--text3);white-space:nowrap">バッジ色：</span>
+          <select id="new-field-color" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;color:var(--text);font-size:13px;font-family:'Noto Sans JP',sans-serif;outline:none">
+            <option value="">なし</option>
+            <option value="green">緑（Good系）</option>
+            <option value="amber">黄（課題系）</option>
+            <option value="blue">青（情報・計画系）</option>
+            <option value="red">赤（警告系）</option>
+          </select>
           <button class="add-field-btn" onclick="addField()">追加</button>
         </div>
         <div class="settings-section-title">デフォルト項目を戻す</div>
@@ -524,11 +538,17 @@ function deleteField(i){
 }
 function addField(){
   const input=document.getElementById('new-field-input');
+  const badgeInput=document.getElementById('new-badge-input');
+  const colorSelect=document.getElementById('new-field-color');
   const label=input.value.trim();
   if(!label){ showToast('項目名を入力してください'); return; }
+  const badge=badgeInput.value.trim();
+  const badgeColor=badge?colorSelect.value:'';
   const id='custom_'+Date.now();
-  tempFields.push({id,label,badge:'',badgeColor:''});
+  tempFields.push({id,label,badge,badgeColor});
   input.value='';
+  badgeInput.value='';
+  colorSelect.value='';
   renderFieldsList();
 }
 function resetFields(){
